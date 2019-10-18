@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.supergate.shoppingfolder.repository.ShoppingmallRepository">
+
+    <sql id="shoppingColumns">
+        shoppingmall.id,
+        shoppingmall.name,
+        shoppingmall.banner_url as bannerUrl,
+        shoppingmall.detail_url as detailUrl,
+        shoppingmall.display_order as displayOrder,
+        shoppingmall.created_date as createdDate,
+        shoppingmall.updated_date as updatedDate
+    </sql>
+
+    <select id="selectShoppingmalls" resultType="kr.supergate.shoppingfolder.domain.Shoppingmall">
+		SELECT <include refid="shoppingColumns"/>
+		FROM   shoppingmall
+	</select>
+
+    <select id="selectShoppingmall" resultType="kr.supergate.shoppingfolder.domain.Shoppingmall">
+        SELECT <include refid="shoppingColumns"/>
+        FROM  shoppingmall
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertShoppingmall" useGeneratedKeys="true" keyColumn="id">
+        INSERT INTO shoppingmall (
+        <trim suffixOverrides=",">
+            <if test="shoppingmall.name != null"> name, </if>
+            <if test="shoppingmall.bannerUrl != null"> banner_url, </if>
+            <if test="shoppingmall.detailUrl != null"> detail_url, </if>
+            <if test="shoppingmall.displayOrder != null"> display_order, </if>
+            <if test="shoppingmall.createdDate != null"> created_date, </if>
+        </trim>
+        , created_date
+        )
+        VALUES (
+        <trim suffixOverrides=",">
+            <if test="shoppingmall.name != null"> #{shoppingmall.name}, </if>
+            <if test="shoppingmall.bannerUrl != null"> #{shoppingmall.bannerUrl}, </if>
+            <if test="shoppingmall.detailUrl != null"> #{shoppingmall.detailUrl}, </if>
+            <if test="shoppingmall.displayOrder != null"> #{shoppingmall.displayOrder}, </if>
+        </trim>
+        , now()
+        )
+    </insert>
+
+    <update id="updateShoppingmall">
+        UPDATE shoppingmall
+        SET
+        <trim suffixOverrides=",">
+            <if test="name != null"> name = #{name} ,</if>
+            <if test="bannerUrl != null"> banner_url = #{bannerUrl} ,</if>
+            <if test="detailUrl != null"> detail_url = #{detailUrl} ,</if>
+            <if test="displayOrder != null"> display_order = #{displayOrder} ,</if>
+            updated_date = now() ,
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteShoppingmall">
+		DELETE
+		FROM shoppingmall
+		WHERE id = #{id}
+	</delete>
+
+</mapper>

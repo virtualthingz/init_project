@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.supergate.shoppingfolder.repository.UserRepository">
+
+    <resultMap id="userResult" type="kr.supergate.shoppingfolder.domain.User">
+        <id property="userId" column="id" />
+        <result property="name" column="name"/>
+        <result property="ci" column="ci"/>
+        <result property="mdn" column="mdn"/>
+        <result property="birthday" column="birthday"/>
+        <result property="addressBasic" column="address_basic"/>
+        <result property="addressDetail" column="address_detail"/>
+        <result property="email" column="email"/>
+        <result property="gender" column="gender"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="zipCode" column="zip_code"/>
+        <result property="userType" column="user_type"/>
+        <result property="loginId" column="login_id"/>
+        <result property="password" column="password"/>
+        <result property="authType" column="auth_type"/>
+        <result property="dataDeletedDate" column="data_deleted_date"/>
+        <result property="deletedDate" column="deletedDate"/>
+    </resultMap>
+
+    <!--<sql id="productLikeColumns">product_like.id as pl_id,product_like.user_id as pl_user_id,product_like.product_id as pl_product_id</sql>-->
+    <sql id="userColumns"> ci, name, mdn, birthday, address_basic, address_detail, email, gender, zip_code, user.created_date, user_type, auth_type, user.deleted_date, user.data_deleted_date</sql>
+    <sql id="loginableColumns">user_loginable.login_id</sql>
+
+    <select id="selectUserMdnById" resultMap="userResult">
+		SELECT user.id, substring(user.mdn,-6,6) as mdn
+		FROM   user
+		WHERE  user.id >= #{id}
+	</select>
+
+
+    <select id="selectUser" resultMap="userResult">
+        SELECT user.id, <include refid="userColumns"/>, <include refid="loginableColumns" />
+        FROM   user
+        LEFT OUTER JOIN user_loginable ON user.id = user_loginable.user_id
+        WHERE  user.id = #{id}
+        ORDER BY user.id DESC LIMIT 1
+    </select>
+
+    <select id="selectLoginUser" resultMap="userResult">
+        SELECT user.id as id, <include refid="userColumns"/>, user_loginable.login_id as login_id, user_loginable.password as password
+        FROM   user
+        INNER JOIN user_loginable ON user_loginable.user_id = user.id
+        WHERE  user.id = #{id}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectUserByCi" resultMap="userResult">
+        SELECT id, <include refid="userColumns"/>
+        FROM   user
+        WHERE  ci = #{ci}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectUserByMdn" resultMap="userResult">
+        SELECT id, <include refid="userColumns"/>
+        FROM   user
+        WHERE  mdn = #{mdn}
+        AND    user.deleted_date IS NULL
+    </select>
+    <select id="selectUserByName" resultMap="userResult">
+        SELECT id, <include refid="userColumns"/>
+        FROM   user
+        WHERE  name = #{name}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectUserByLoginId" resultMap="userResult">
+        SELECT user.id as id, <include refid="userColumns"/>, user_loginable.login_id as login_id, user_loginable.password as password
+        FROM   user
+        INNER JOIN user_loginable ON user_loginable.user_id = user.id
+        WHERE  login_id = #{loginId}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectLoginUserByMdn" resultMap="userResult">
+        SELECT user.id as id, <include refid="userColumns"/>, user_loginable.login_id as login_id, user_loginable.password as password
+        FROM   user, user_loginable
+        WHERE  user_loginable.user_id = user.id
+        AND    user.mdn = #{mdn}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectUserBySsoSerial" resultMap="userResult">
+        SELECT user.id as id, <include refid="userColumns"/>
+        FROM   user
+        INNER JOIN user_sso ON user_sso.user_id = user.id
+        WHERE  user_sso.sso_serial = #{ssoSerial}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectUserByNameAndLoginId" resultMap="userResult">
+        SELECT user_loginable.user_id as id, <include refid="userColumns"/>
+        FROM   user_loginable
+        INNER JOIN user ON user_loginable.user_id = user.id
+        WHERE  user_loginable.login_id = #{loginId}
+        AND    user.name = #{name}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <select id="selectSsoSerialByUserId" resultType="String">
+		SELECT sso_serial
+		FROM user_sso
+		WHERE user_id = #{user_id}
+	</select>
+
+    <select id="selectUserByNameAndMdn" resultMap="userResult">
+        SELECT user.id, user_loginable.login_id as login_id, <include refid="userColumns"/>
+        FROM   user
+        LEFT OUTER JOIN user_loginable ON user_loginable.user_id = user.id
+        WHERE  user.name = #{name}
+        AND    user.mdn = #{mdn}
+        AND    user.deleted_date IS NULL
+    </select>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId" keyColumn="id">
+        INSERT INTO user (<include refid="userColumns"/>)
+        VALUES (#{ci}, #{name},#{mdn}, #{birthday}, #{addressBasic}, #{addressDetail}, #{email}, #{gender},#{zipCode},now(), #{userType}, #{authType}, NULL, NULL)
+    </insert>
+
+    <insert id="insertSsoUser" useGeneratedKeys="true">
+		INSERT INTO user_sso (sso_serial, sso_type, user_id)
+		VALUES (#{ssoSerial}, #{authType}, #{userId} )
+	</insert>
+
+    <insert id="insertLoginUser" useGeneratedKeys="true">
+		INSERT INTO user_loginable (login_id, password, user_id)
+		VALUES (#{loginId}, #{password}, #{userId} )
+	</insert>
+
+    <update id="updateUser" parameterType="kr.supergate.shoppingfolder.domain.User">
+        UPDATE user
+        SET
+        <trim suffixOverrides=",">
+            <if test="name != null"> name = #{name} ,</if>
+            <if test="ci != null"> ci = #{ci} ,</if>
+            <if test="mdn != null"> mdn = #{mdn} ,</if>
+            <if test="birthday != null"> birthday = #{birthday} ,</if>
+            <if test="addressBasic != null"> address_basic = #{addressBasic} ,</if>
+            <if test="addressDetail != null"> address_detail = #{addressDetail} ,</if>
+            <if test="email != null"> email = #{email} ,</if>
+            <if test="gender != null"> gender = #{gender} ,</if>
+            <if test="zipCode != null"> zip_code = #{zipCode} ,</if>
+            <if test="country != null">country = #{country} ,</if>
+            <if test="deletedDate != null">
+                deleted_date = NOW() ,
+                recommendation_code = NULL,
+            </if>
+            <if test="dataDeletedDate != null">data_deleted_date = #{dataDeletedDate} ,</if>
+        </trim>
+        WHERE id = #{userId}
+    </update>
+
+    <update id="updateLoginUser" parameterType="kr.supergate.shoppingfolder.domain.User">
+        UPDATE user_loginable
+        SET
+        <trim suffixOverrides=",">
+            <if test="password != null"> password = #{password} ,</if>
+        </trim>
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteUser">
+		DELETE
+		FROM user
+		WHERE id = #{userId}
+	</delete>
+
+</mapper>

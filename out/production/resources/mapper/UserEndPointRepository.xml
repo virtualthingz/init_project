@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.supergate.shoppingfolder.repository.UserEndPointRepository">
+
+    <resultMap id="userEndPointResult" type="kr.supergate.shoppingfolder.domain.UserEndPoint">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id"/>
+        <result property="endPointId" column="endpoint_id"/>
+        <result property="updatedDate" column="updated_date"/>
+        <result property="deviceType" column="device_type"/>
+        <result property="adYn" column="ad_yn"/>
+        <result property="infoYn" column="info_yn"/>
+        <result property="talkInfoYn" column="talk_info_yn"/>
+    </resultMap>
+
+    <!--<sql id="productLikeColumns">product_like.id as pl_id,product_like.user_id as pl_user_id,product_like.product_id as pl_product_id</sql>-->
+    <sql id="userEndPointColumns"> user_id, endpoint_id, updated_date, device_type, ad_yn, info_yn, talk_info_yn</sql>
+
+    <select id="selectUserEndPointById" resultMap="userEndPointResult">
+        SELECT id, <include refid="userEndPointColumns"/>
+        FROM   user_endpoint
+        WHERE  id = #{id}
+    </select>
+
+    <select id="selectUserEndPoint" resultMap="userEndPointResult">
+        SELECT id, <include refid="userEndPointColumns"/>
+        FROM   user_endpoint
+        WHERE  user_id = #{userId}
+    </select>
+
+    <insert id="insertUserEndPoint" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO user_endpoint (<include refid="userEndPointColumns"/>)
+        VALUES (#{userId}, #{endPointId}, now(), #{deviceType}, #{adYn}, #{infoYn}, #{talkInfoYn})
+    </insert>
+
+    <update id="updateUserEndPoint" parameterType="kr.supergate.shoppingfolder.domain.UserEndPoint">
+        UPDATE user_endpoint
+        SET
+            <if test="endPointId != null"> endpoint_id = #{endPointId} ,</if>
+            <if test="deviceType != null"> device_type = #{deviceType} ,</if>
+            <if test="adYn != null"> ad_yn = #{adYn} ,</if>
+            <if test="infoYn != null"> info_yn = #{infoYn} ,</if>
+            <if test="talkInfoYn != null"> talk_info_yn = #{talkInfoYn} ,</if>
+        updated_date = now()
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUserEndPointNullByUserId">
+        UPDATE user_endpoint
+        SET
+          endpoint_id = NULL,
+        updated_date = now()
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteUserEndPoint">
+        DELETE
+        FROM user_endpoint
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

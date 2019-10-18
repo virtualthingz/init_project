@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.supergate.shoppingfolder.repository.UserSignHistoryRepository">
+
+	<sql id="userSignHistoryColumns"> user_id, type, sign_date </sql>
+
+	<resultMap id="userHistoryResult" type="kr.supergate.shoppingfolder.domain.sign.UserSignHistory">
+		<id property="userId" column="user_id" />
+		<result property="id" column="id" />
+		<result property="type" column="type"/>
+		<result property="signDate" column="sign_date"/>
+	</resultMap>
+
+	<insert id="insertSignHistory" useGeneratedKeys="true" parameterType="map">
+		<selectKey resultType="integer" keyProperty="id" order="BEFORE">
+			SELECT IFNULL(MAX(id)+1,1) FROM user_sign_history  WHERE user_id = #{userId}
+		</selectKey>
+		INSERT INTO user_sign_history (id, <include refid="userSignHistoryColumns" />)
+		VALUES (#{id} , #{userId}, #{type}, CURRENT_TIMESTAMP)
+	</insert>
+
+	<select id = "selectSignHistoryCountBySignTypeAndUserId" parameterType="map" resultType="long">
+		SELECT COUNT(*) FROM user_sign_history WHERE user_id = #{userId} AND type = #{type}
+	</select>
+
+	<select id="selectSignHistoryCountByUserIdOrderByIdDescLimit30" parameterType="map" resultMap="userHistoryResult">
+		SELECT <include refid="userSignHistoryColumns"/> FROM user_sign_history WHERE user_id = #{userId} ORDER BY sign_date DESC LIMIT 0, 30
+	</select>
+</mapper>

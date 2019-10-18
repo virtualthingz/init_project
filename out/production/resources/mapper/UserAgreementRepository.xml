@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.supergate.shoppingfolder.repository.UserAgreementRepository">
+	<resultMap id="agreementClauseResult" type="kr.supergate.shoppingfolder.domain.AgreementClause">
+		<id property="id" column="id" />
+		<result property="title" column="title"/>
+		<result property="description" column="description"/>
+		<result property="isMandatory" column="is_mandatory"/>
+	</resultMap>
+
+	<select id="selectAgreedClauseForUserId" resultMap="agreementClauseResult">
+		SELECT ua.clause_id as id, au.title, au.description, au.is_mandatory
+		FROM   user_agreement ua
+		INNER JOIN agreement_clauses au ON ua.clause_id = au.id
+		WHERE  ua.user_id = #{userId}
+	</select>
+
+	<select id="countClauses" resultType="integer">
+		SELECT COUNT(1)
+		FROM agreement_clauses
+		WHERE id IN
+		<foreach collection="list" item="item" index="index" separator="," open="(" close=")">
+			#{item.value}
+		</foreach>
+	</select>
+
+	<insert id="insertAgreedClauseForUserId" useGeneratedKeys="true">
+		INSERT IGNORE
+		INTO user_agreement (user_id, clause_id)
+		VALUES (#{userId}, #{clauseId} )
+	</insert>
+
+	<delete id="deleteAgreedClauseForUserId">
+		DELETE
+		FROM user_agreement
+		WHERE user_id = #{userId}
+		AND clause_id = #{clauseId}
+	</delete>
+
+</mapper>
